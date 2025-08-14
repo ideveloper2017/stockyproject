@@ -383,6 +383,7 @@ export default {
             categories: [],
             brands: [],
             products: {},
+            pdfproducts: {},
             warehouses: [],
             totalsAllCount: 0,
             totalsAllQty: 0,
@@ -605,9 +606,6 @@ export default {
                 { title: "Tovar nomi", dataKey: "name" },
                 { title: "Tovar kodi", dataKey: "code" },
                 { title: "Kategoriya", dataKey: "category" },
-                // { title: self.$t("Cost"), dataKey: "cost" },
-                // { title: "Miqdori", dataKey: "quantity" },
-                // { title: self.$t("Unit"), dataKey: "unit" },
                 { title: "Narxi", dataKey: "price" },
                 { title: "", dataKey: "blank" }
             ];
@@ -625,7 +623,6 @@ export default {
                             const w = size, h = size;
                             canvas.width = w;
                             canvas.height = h;
-                            // cover fit
                             const scale = Math.max(w / img.width, h / img.height);
                             const x = (w / 2) - (img.width / 2) * scale;
                             const y = (h / 2) - (img.height / 2) * scale;
@@ -635,76 +632,79 @@ export default {
                             resolve(null);
                         }
                     };
-                    img.onerror = function () { resolve(null); };
+                    img.onerror = () => resolve(null);
                     img.src = url;
                 });
 
-            // Prepare rows with image data (store dataURL in _img, keep image cell text empty)
-            const products_pdf = await Promise.all(
-                JSON.parse(JSON.stringify(self.products)).sort((a, b) => a.category.localeCompare(b.category)).map(async (item) => {
-                    const imageUrl = item.image ? `/images/products/${item.image}` : null;
-                    const imageData = await toDataUrl(imageUrl, 36);
-                    return {
-                        ...item,
-                        _img: imageData,
-                        image: null, // keep text empty so nothing renders as text
-                        name: item.name ? item.name.replace(/<br\s*\/?>/gi, "\n") : "",
-                        cost: item.cost ? item.cost.replace(/<br\s*\/?>/gi, "\n") : "",
-                        price: item.price ? item.price.replace(/<br\s*\/?>/gi, "\n") : "",
-                        blank: "",
-                    };
-                })
-            );
+            // Prepare rows with image data
+            let products_pdf = [];
+            try {
+                if (Array.isArray(self.pdfproducts) && self.pdfproducts.length > 0) {
+                    products_pdf = await Promise.all(
+                        JSON.parse(JSON.stringify(self.pdfproducts))
+                            .filter(item => item && typeof item === 'object')
+                            .sort((a, b) => {
+                                const catA = (a.category || '').toString();
+                                const catB = (b.category || '').toString();
+                                return catA.localeCompare(catB);
+                            })
+                            .map(async (item) => {
+                                try {
+                                    const imageUrl = item.image ? `/images/products/${item.image}` : null;
+                                    const imageData = await toDataUrl(imageUrl, 36);
+                                    return {
+                                        ...item,
+                                        _img: imageData,
+                                        image: null,
+                                        name: item.name ? String(item.name).replace(/<br\s*\/?>/gi, "\n") : "",
+                                        price: item.price ? String(item.price).replace(/<br\s*\/?>/gi, "\n") : "",
+                                        blank: "",
+                                    };
+                                } catch (e) {
+                                    console.error('Error processing product:', e);
+                                    return null;
+                                }
+                            })
+                    );
+                    products_pdf = products_pdf.filter(item => item !== null);
+                } else {
+                    console.warn('No products data available for PDF generation');
+                }
+            } catch (error) {
+                console.error('Error preparing products for PDF:', error);
+            }
 
-            // Compute totals for Quantity and Price
+            // Calculate total price
             const toNumber = (v) => {
                 if (v === null || v === undefined) return 0;
                 const n = parseFloat(String(v).replace(/[^\d.-]/g, ''));
                 return isNaN(n) ? 0 : n;
             };
-            const totalQty = products_pdf.reduce((sum, r) => sum + toNumber(r.quantity), 0);
-            const totalPrice = products_pdf.reduce((sum, r) => sum + toNumber(r.price), 0);
-            const foot = [
-                {
-                    image: '',
-                    name: 'Jami:',
-                    code: '',
-                    category: '',
-                    quantity: "",
-                    price: totalPrice.toFixed(2),
-                    blank: '',
-                }
-            ];
 
-            pdf.autoTable({
-                columns,
+            const totalPrice = products_pdf.reduce((sum, r) => sum + toNumber(r.price), 0);
+
+            // Add title and date
+            pdf.setFont("VazirmatnBold");
+            pdf.setFontSize(18);
+            pdf.text("Mahsulotlar ro'yxati", 40, 40);
+
+            const currentDate = new Date().toLocaleDateString('uz-UZ');
+            pdf.setFontSize(10);
+            pdf.text(`Sana: ${currentDate}`, 40, 60);
+
+            // Table config
+            const tableConfig = {
+                columns: columns,
                 body: products_pdf,
-                foot,
-                startY: 70,
+                startY: 80,
                 theme: "grid",
                 didParseCell: (data) => {
-                    // Ensure image cell has no text content at all
                     if (data.section === "body" && data.column.dataKey === "image") {
                         data.cell.text = [];
                     }
                 },
-                didDrawPage: () => {
-                    pdf.setFont("VazirmatnBold");
-                    pdf.setFontSize(18);
-                    pdf.text("Product List", 40, 25);
-                },
-                styles: {
-                    font: "VazirmatnBold",
-                    halign: "center",
-                    cellPadding: 4,
-                },
                 headStyles: {
                     fillColor: [200, 200, 200],
-                    textColor: [0, 0, 0],
-                    fontStyle: "bold",
-                },
-                footStyles: {
-                    fillColor: [240, 240, 240],
                     textColor: [0, 0, 0],
                     fontStyle: "bold",
                 },
@@ -713,22 +713,76 @@ export default {
                 },
                 didDrawCell: (data) => {
                     if (data.section === "body" && data.column.dataKey === "image") {
-                        const imgData = data.row.raw && data.row.raw._img;
+                        const imgData = data.row.raw?._img;
                         if (imgData) {
                             const size = 28;
-                            const x = data.cell.x + 2;
-                            const y = data.cell.y + 2;
-                            try { pdf.addImage(imgData, "PNG", x, y, size, size); } catch (e) { /* ignore */ }
+                            const x = data.cell.x + 4;
+                            const y = data.cell.y + 4;
+                            try {
+                                pdf.addImage(imgData, "PNG", x, y, size, size);
+                            } catch (e) {
+                                console.error('Error adding image:', e);
+                            }
                         }
                     }
                 },
                 columnStyles: {
-                    image: { cellWidth: 36, halign: "center", minCellHeight: 32, overflow: 'hidden' },
+                    image: { cellWidth: 36, halign: "center", minCellHeight: 36, overflow: 'hidden' },
+                    name: { cellWidth: 'auto', halign: 'left' },
+                    code: { cellWidth: 'auto', halign: 'center' },
+                    category: { cellWidth: 'auto', halign: 'center' },
+                    price: { cellWidth: 'auto', halign: 'right' },
                     blank: { cellWidth: 36, halign: "center" },
                 },
+                margin: { top: 80, right: 20, bottom: 50, left: 20 },
+            };
+
+            // Generate table
+            pdf.autoTable(tableConfig);
+
+            // Add footer (total row) only on last page
+            const finalY = pdf.lastAutoTable.finalY || 80;
+            const footerY = finalY + 10;
+
+            const foot = [
+                [
+                    { content: '', styles: { cellWidth: 36 } },
+                    { content: 'Jami:', styles: { fontStyle: 'bold', halign: 'right', colSpan: 4 } },
+                    { content: totalPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' '), styles: { fontStyle: 'bold', halign: 'right', fillColor: [240, 240, 240] } },
+                    { content: '', styles: { cellWidth: 36 } }
+                ]
+            ];
+
+            pdf.autoTable({
+                head: [],
+                body: foot,
+                startY: footerY,
+                theme: 'plain',
+                columnStyles: {
+                    0: { cellWidth: 36 },
+                    1: { halign: 'right', fontStyle: 'bold' },
+                    2: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] },
+                    3: { cellWidth: 36 }
+                },
+                margin: { left: 20, right: 20 }
             });
 
-            pdf.save("Product_List.pdf");
+            // Add page numbers
+            const pageCount = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(10);
+                pdf.text(
+                    `Sahifa ${i} / ${pageCount}`,
+                    pdf.internal.pageSize.width - 50,
+                    pdf.internal.pageSize.height - 10,
+                    { align: 'right' }
+                );
+            }
+
+            // Save PDF
+            const dateStr = new Date().toISOString().split('T')[0];
+            pdf.save(`Mahsulotlar_${dateStr}.pdf`);
         },
 
         //----------------------------------- Show import products -------------------------------\\
@@ -956,23 +1010,18 @@ export default {
             };
             axios
                 .get(
-                    "products?page=1" +
-                    "&code=" + this.Filter_code +
-                    "&name=" + this.Filter_name +
-                    "&category_id=" + this.Filter_category +
-                    "&brand_id=" + this.Filter_brand +
-                    "&SortField=" + this.serverParams.sort.field +
-                    "&SortType=" + this.serverParams.sort.type +
-                    "&search=" + this.search +
-                    "&limit=" + 100000
+                    "get_products"
                 )
                 .then(res => {
+                    this.pdfproducts=res.data.products;
                     const rows = Array.isArray(res.data.products) ? res.data.products : [];
+
+
                     this.totalsAllCount = rows.length;
                     this.totalsAllQty = rows.reduce((s, r) => s + parse(r.quantity), 0);
                     this.totalsAllPrice = rows.reduce((s, r) => s + parse(r.price), 0);
                     this.totalsAllCost = rows.reduce((s, r) => s + parse(r.cost), 0);
-                    this.totalsAllProductSumma = rows.reduce((s, r) => s + (parseFloat(r.price || 0) * parseFloat(r.quantity || 0)), 0);
+                    this.totalsAllProductSumma = rows.reduce((s, r) => s + parse(r.price)*parse(r.quantity),0);
                 })
                 .finally(() => {
                     this.totalsLoading = false;

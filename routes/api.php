@@ -48,9 +48,9 @@ Route::get('/translations/{locale}', function ($locale) {
  Route::get('/languages', 'LanguageController@load_language');
 
 Route::middleware(['auth:api', 'Is_Active'])->group(function () {
-    
+
     Route::get("dashboard_data", "DashboardController@dashboard_data");
-    
+
     Route::get('/retrieve-customer', 'StripeController@retrieveCustomer');
     Route::post('/update-customer-stripe', 'StripeController@updateCustomer');
 
@@ -146,7 +146,7 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
 
 
     //------------------------------- payment_methods ------------------------\\
-    //------------------------------------------------------------------\\    
+    //------------------------------------------------------------------\\
     Route::resource('payment_methods', 'PaymentMethodController');
 
     //------------------------------Employee------------------------------------\\
@@ -162,13 +162,13 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
 
     //------------------------------- Employee Experience ----------------\\
     //--------------------------------------------------------------------\\
-    
+
     Route::resource('work_experience', 'hrm\EmployeeExperienceController');
 
 
     //------------------------------- Employee Accounts bank ----------------\\
     //--------------------------------------------------------------------\\
-    
+
     Route::resource('employee_account', 'hrm\EmployeeAccountController');
 
 
@@ -206,7 +206,7 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
     Route::post("attendances/delete/by_selection", "hrm\AttendancesController@delete_by_selection");
 
 
-    
+
     //------------------------------- Request leave  -----------------------\\
     //----------------------------------------------------------------\\
 
@@ -252,7 +252,7 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
     Route::get('get_client_store_data/{id}', 'ClientController@get_client_store_data');
 
 
-    
+
     //------------------------------- CLIENTS Ecommerce--------------------------\\
     //------------------------------------------------------------------\\
 
@@ -315,12 +315,13 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
             Route::post("task_documents", "TaskController@Create_task_documents");
             Route::delete("task_documents/{id}", "TaskController@destroy_task_documents");
 
-            
+
 
     //------------------------------- PRODUCTS --------------------------\\
     //------------------------------------------------------------------\\
 
     Route::resource('products', 'ProductsController');
+    Route::get('get_products', 'ProductsController@getIndex');
     Route::post('products/import/csv', 'ProductsController@import_products');
     Route::get('get_Products_by_warehouse/{id}', 'ProductsController@Products_by_Warehouse');
     Route::get('get_product_detail/{id}', 'ProductsController@Get_Products_Details');
@@ -379,7 +380,7 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
     Route::get('get_Products_by_purchase/{id}', 'PurchasesController@get_Products_by_purchase');
     Route::post('purchase_send_whatsapp', 'PurchasesController@purchase_send_whatsapp');
 
-    
+
     Route::get('get_import_purchases', 'PurchasesController@get_import_purchases');
     Route::post('store_import_purchases', 'PurchasesController@store_import_purchases');
     //------------------------------- Payments  Purchases --------------------------\\
@@ -485,7 +486,7 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
     Route::post('returns/purchase/delete/by_selection', 'PurchasesReturnController@delete_by_selection');
     Route::get('returns/purchase/create_purchase_return/{id}', 'PurchasesReturnController@create_purchase_return');
     Route::get('returns/purchase/edit_purchase_return/{id}/{purchase_id}', 'PurchasesReturnController@edit_purchase_return');
-    
+
     //------------------------------- Payment Sale Returns --------------------------\\
     //--------------------------------------------------------------------------------\\
 
@@ -530,16 +531,16 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
     Route::resource('roles/check/create_page', 'PermissionsController@Check_Create_Page');
     Route::post('roles/delete/by_selection', 'PermissionsController@delete_by_selection');
 
-    
+
     //------------------------------- Settings ------------------------\\
-    //------------------------------------------------------------------\\    
+    //------------------------------------------------------------------\\
     Route::resource('settings', 'SettingsController');
     Route::get('get_Settings_data', 'SettingsController@getSettings');
     Route::put('pos_settings/{id}', 'SettingsController@update_pos_settings');
     Route::get('get_pos_Settings', 'SettingsController@get_pos_Settings');
 
     //------------------------------- appearance_settings ------------------------\\
-    //------------------------------------------------------------------\\   
+    //------------------------------------------------------------------\\
 
     Route::get('get_appearance_settings', 'SettingsController@get_appearance_settings');
     Route::put('update_appearance_settings/{id}', 'SettingsController@update_appearance_settings');
@@ -575,10 +576,10 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
     //------------------------------- Update Settings ------------------------\\
 
     Route::get('get_version_info', 'UpdateController@get_version_info');
-    
+
     //------------------------------- Backup --------------------------\\
     //------------------------------------------------------------------\\
-    
+
     Route::get("get_backup", "BackupController@Get_Backup");
     Route::get("generate_new_backup", "BackupController@Generate_Backup");
     Route::delete("delete_backup/{name}", "BackupController@Delete_Backup");
