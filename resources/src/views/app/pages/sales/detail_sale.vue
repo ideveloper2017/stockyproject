@@ -101,6 +101,7 @@
                 <table class="table table-hover table-md">
                   <thead class="bg-gray-300">
                     <tr>
+                      <th scope="col">{{$t('Image')}}</th>
                       <th scope="col">{{$t('ProductName')}}</th>
                       <th scope="col">{{$t('Net_Unit_Price')}}</th>
                       <th scope="col">{{$t('Quantity')}}</th>
@@ -112,6 +113,15 @@
                   </thead>
                   <tbody>
                     <tr v-for="detail in details">
+                        <td>
+                            <b-img
+                                thumbnail
+                                height="50"
+                                width="50"
+                                fluid
+                                :src="'/images/products/' +  detail.image"
+                                alt="image"
+                            ></b-img>
                       <td><span>{{detail.code}} ({{detail.name}})</span>
                         <p v-show="detail.is_imei && detail.imei_number !==null ">{{$t('IMEI_SN')}} : {{detail.imei_number}}</p>
                       </td>
@@ -218,7 +228,7 @@ export default {
   },
 
   methods: {
-   
+
 
     //----------------------------------- Invoice Sale PDF  -------------------------\\
     Sale_PDF() {
@@ -226,7 +236,7 @@ export default {
       NProgress.start();
       NProgress.set(0.1);
       let id = this.$route.params.id;
-     
+
        axios
         .get(`sale_pdf/${id}`, {
           responseType: "blob", // important

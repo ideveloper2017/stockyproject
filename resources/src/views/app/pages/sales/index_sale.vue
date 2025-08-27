@@ -1373,69 +1373,121 @@ export default {
 
     //----------------------------------- Sales PDF ------------------------------\\
 
-    Sales_PDF() {
-      var self = this;
-      let pdf = new jsPDF("p", "pt");
+      Sales_PDF() {
+          var self = this;
+          let pdf = new jsPDF("p", "pt");
 
-      const fontPath = "/fonts/Vazirmatn-Bold.ttf";
-      pdf.addFont(fontPath, "VazirmatnBold", "bold");
-      pdf.setFont("VazirmatnBold");
-
-      let columns = [
-        { title: self.$t("Reference"), dataKey: "Ref" },
-        { title: self.$t("Customer"), dataKey: "client_name" },
-        { title: self.$t("warehouse"), dataKey: "warehouse_name" },
-        { title: self.$t("Status"), dataKey: "statut" },
-        { title: self.$t("Total"), dataKey: "GrandTotal" },
-        { title: self.$t("Paid"), dataKey: "paid_amount" },
-        { title: self.$t("Due"), dataKey: "due" },
-        { title: self.$t("PaymentStatus"), dataKey: "payment_status" },
-      ];
-
-      let totalGrandTotal = self.sales.reduce((sum, sale) => sum + parseFloat(sale.GrandTotal || 0), 0);
-      let totalPaidAmount = self.sales.reduce((sum, sale) => sum + parseFloat(sale.paid_amount || 0), 0);
-      let totalDue = self.sales.reduce((sum, sale) => sum + parseFloat(sale.due || 0), 0);
-
-      let footer = [{
-        Ref: self.$t("Total"),
-        client_name: '',
-        warehouse_name: '',
-        statut: '',
-        GrandTotal: `${totalGrandTotal.toFixed(2)}`,
-        paid_amount: `${totalPaidAmount.toFixed(2)}`,
-        due: `${totalDue.toFixed(2)}`,
-        payment_status: '',
-      }];
-
-      pdf.autoTable({
-        columns: columns,
-        body: self.sales,
-        foot: footer,
-        startY: 70,
-        theme: "grid",
-        didDrawPage: (data) => {
+          // Add font
+          const fontPath = "/fonts/Vazirmatn-Bold.ttf";
+          pdf.addFont(fontPath, "VazirmatnBold", "bold");
           pdf.setFont("VazirmatnBold");
-          pdf.setFontSize(18);
-          pdf.text("Sales List", 40, 25);
-        },
-        styles: {
-          font: "VazirmatnBold",
-          halign: "center", //
-        },
-        headStyles: {
-          fillColor: [200, 200, 200],
-          textColor: [0, 0, 0],
-          fontStyle: "bold",
-        },
-        footStyles: {
-          fillColor: [230, 230, 230],
-          textColor: [0, 0, 0],
-          fontStyle: "bold",
-        },
-      });
 
-      pdf.save("Sales_List.pdf");
-    },
+          // Prepare data with image placeholders
+          const data = this.sales.map(sale => ({
+              ...sale,
+              // Convert image path to data URL if needed, or use a placeholder
+              image: sale.image ? { content: sale.image, width: 30, height: 30 } : null
+          }));
+
+          console.log(data);
+          let columns = [
+              {
+                  title: self.$t("image"),
+                  dataKey: "image"
+              },
+              { title: self.$t("Reference"), dataKey: "Ref" },
+              { title: self.$t("Customer"), dataKey: "client_name" },
+              { title: self.$t("warehouse"), dataKey: "warehouse_name" },
+              { title: self.$t("Status"), dataKey: "statut" },
+              {
+                  title: self.$t("Total"),
+                  dataKey: "GrandTotal",
+                  renderCell: function(cellData) {
+                      return parseFloat(cellData).toFixed(2);
+                  }
+              },
+              {
+                  title: self.$t("Paid"),
+                  dataKey: "paid_amount",
+                  renderCell: function(cellData) {
+                      return parseFloat(cellData).toFixed(2);
+                  }
+              },
+              {
+                  title: self.$t("Due"),
+                  dataKey: "due",
+                  renderCell: function(cellData) {
+                      return parseFloat(cellData).toFixed(2);
+                  }
+              },
+              { title: self.$t("PaymentStatus"), dataKey: "payment_status" },
+          ];
+
+          // Calculate totals
+          let totalGrandTotal = self.sales.reduce((sum, sale) => sum + parseFloat(sale.GrandTotal || 0), 0);
+          let totalPaidAmount = self.sales.reduce((sum, sale) => sum + parseFloat(sale.paid_amount || 0), 0);
+          let totalDue = self.sales.reduce((sum, sale) => sum + parseFloat(sale.due || 0), 0);
+
+          // Footer with totals
+          let footer = [{
+              image: '',
+              Ref: self.$t("Total"),
+              client_name: '',
+              warehouse_name: '',
+              statut: '',
+              GrandTotal: totalGrandTotal.toFixed(2),
+              paid_amount: totalPaidAmount.toFixed(2),
+              due: totalDue.toFixed(2),
+              payment_status: '',
+          }];
+
+          // Generate PDF
+          pdf.autoTable({
+              columns: columns,
+              body: data,
+              foot: footer,
+              startY: 70,
+              theme: "grid",
+              didDrawPage: (data) => {
+                  pdf.setFont("VazirmatnBold");
+                  pdf.setFontSize(18);
+                  pdf.text("Sales List", 40, 25);
+              },
+              styles: {
+                  font: "VazirmatnBold",
+                  halign: "center",
+                  cellPadding: 5,
+                  lineColor: [0, 0, 0],
+                  lineWidth: 0.1,
+                  textColor: [0, 0, 0],
+                  fontSize: 10,
+              },
+              headStyles: {
+                  fillColor: [200, 200, 200],
+                  textColor: [0, 0, 0],
+                  fontStyle: "bold",
+                  lineWidth: 0.5,
+              },
+              footStyles: {
+                  fillColor: [230, 230, 230],
+                  textColor: [0, 0, 0],
+                  fontStyle: "bold",
+              },
+              columnStyles: {
+                  image: { cellWidth: 40 },
+                  Ref: { cellWidth: 80 },
+                  client_name: { cellWidth: 80 },
+                  warehouse_name: { cellWidth: 80 },
+                  statut: { cellWidth: 60 },
+                  GrandTotal: { cellWidth: 60, halign: 'right' },
+                  paid_amount: { cellWidth: 60, halign: 'right' },
+                  due: { cellWidth: 60, halign: 'right' },
+                  payment_status: { cellWidth: 80 }
+              }
+          });
+
+          pdf.save("Sales_List.pdf");
+      },
 
 
     //-------------------------------- Invoice POS ------------------------------\\
