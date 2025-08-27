@@ -1668,13 +1668,15 @@ export default {
           this.isLoading = false;
           // Also refresh totals across ALL filtered sales
           // this.Fetch_Sales_Totals();
-            const rows = Array.isArray(this.sales) ? this.sales : [];
+          //   const rows = Array.isArray(this.sales) ? this.sales : [];
+            const rows =  this.sales;
+            console.log(row);
             this.totalsAllCount = rows.length;
-            this.totalsAllAmount = rows.reduce((s, r) => s + parse(r.total), 0);
+            this.totalsAllAmount = rows.reduce((s, r) => s + Number(r.total), 0);
 
-            this.totalsAllGrand = rows.reduce((s, r) => s + parse(r.GrandTotal), 0);
-            this.totalsAllPaid = rows.reduce((s, r) => s + parse(r.paid_amount), 0);
-            this.totalsAllDue = rows.reduce((s, r) => s + parse(r.due), 0);
+            this.totalsAllGrand = rows.reduce((s, r) => s + Number(r.GrandTotal), 0);
+            this.totalsAllPaid = rows.reduce((s, r) => s + Number(r.paid_amount), 0);
+            this.totalsAllDue = rows.reduce((s, r) => s + Number(r.due), 0);
 
         })
         .catch(response => {
