@@ -350,14 +350,14 @@ if (!empty($setting['logo'])) {
          <img src="{{$logo}}">
          </div>
          <div id="company">
-            <div><strong> Date : </strong>{{$sale['date']}}</div>
-            <div><strong> Number : </strong> {{$sale['Ref']}}</div>
-            <div><strong> Status : </strong> {{$sale['statut']}}</div>
-            <div><strong> Payment Status : </strong> {{$sale['payment_status']}}</div>
+             <div><strong> Дата: </strong> {{$sale['date']}}</div>
+             <div><strong> Номер: </strong> {{$sale['Ref']}}</div>
+             <div><strong> Статус: </strong> {{$sale['statut']}}</div>
+             <div><strong> Статус оплаты: </strong> {{$sale['payment_status']}}</div>
          </div>
-         <div id="Title-heading">
-            Sale  : {{$sale['Ref']}}
-         </div>
+{{--         <div id="Title-heading">--}}
+{{--             Продажа № {{$sale['Ref']}}--}}
+{{--         </div>--}}
          </div>
       </header>
       <main>
@@ -366,16 +366,16 @@ if (!empty($setting['logo'])) {
                <table class="table-sm">
                   <thead>
                      <tr>
-                        <th class="desc">Customer Info</th>
+                        <th class="desc">Информация о клиенте</th>
                      </tr>
                   </thead>
                   <tbody>
                      <tr>
                         <td>
-                           <div><strong>Full Name :</strong> {{$sale['client_name']}}</div>
-                           <div><strong>Phone :</strong> {{$sale['client_phone']}}</div>
-                           <div><strong>Email :</strong>  {{$sale['client_email']}}</div>
-                           <div><strong>Address :</strong>   {{$sale['client_adr']}}</div>
+                           <div><strong>Полное имя :</strong> {{$sale['client_name']}}</div>
+                           <div><strong>Телефон :</strong> {{$sale['client_phone']}}</div>
+{{--                           <div><strong>Email :</strong>  {{$sale['client_email']}}</div>--}}
+                           <div><strong>Адресс :</strong>   {{$sale['client_adr']}}</div>
                            @if($sale['client_tax'])<div><strong>Tax Number :</strong>  {{$sale['client_tax']}}</div>@endif
                         </td>
                      </tr>
@@ -386,16 +386,16 @@ if (!empty($setting['logo'])) {
                <table class="table-sm">
                   <thead>
                      <tr>
-                        <th class="desc">Company Info</th>
+                        <th class="desc">Информация о компании</th>
                      </tr>
                   </thead>
                   <tbody>
                      <tr>
                         <td>
                            <div id="comp">{{$setting['CompanyName']}}</div>
-                           <div><strong>Phone :</strong>  {{$setting['CompanyPhone']}}</div>
-                           <div><strong>Email :</strong>  {{$setting['email']}}</div>
-                           <div><strong>Address :</strong>  {{$setting['CompanyAdress']}}</div>
+                           <div><strong>Телефон :</strong>  {{$setting['CompanyPhone']}}</div>
+{{--                           <div><strong>Email :</strong>  {{$setting['email']}}</div>--}}
+                           <div><strong>Адрес :</strong>  {{$setting['CompanyAdress']}}</div>
                         </td>
                      </tr>
                   </tbody>
@@ -406,30 +406,32 @@ if (!empty($setting['logo'])) {
             <table  class="table-sm">
                <thead>
                   <tr>
-                     <th>Image</th>
-                     <th>PRODUCT</th>
-                     <th>UNIT PRICE</th>
-                     <th>QUANTITY</th>
-                     <th>DISCOUNT</th>
-                     <th>TAX</th>
-                     <th>TOTAL</th>
+                     <th>№</th>
+                     <th>Фото</th>
+                     <th>Товар</th>
+                     <th>Цена</th>
+                     <th>Колво</th>
+{{--                     <th>DISCOUNT</th>--}}
+{{--                     <th>TAX</th>--}}
+                     <th>Итог</th>
                   </tr>
                </thead>
                <tbody>
                   @foreach ($details as $detail)
                   <tr>
-                      <td><img src="{{$detail['image'] }}" style="width: 50px; height: 50px; object-fit: cover;" alt=""/></td>
+                      <td>{{$loop->iteration}}</td>
+                      <td><img src="{{$detail['image'] }}" style="width: 80px; height: 80px; object-fit: cover;" alt=""/></td>
                      <td>
-                        <span>{{$detail['code']}} ({{$detail['name']}})</span>
+                        <span> ({{$detail['name']}})</span>
                            @if($detail['is_imei'] && $detail['imei_number'] !==null)
                               <p>IMEI/SN : {{$detail['imei_number']}}</p>
                            @endif
                      </td>
-                     <td>{{$detail['price']}} </td>
+                     <td>{{number_format($detail['price'],0,'',' ')}} </td>
                      <td>{{$detail['quantity']}}/{{$detail['unitSale']}}</td>
-                     <td>{{$detail['DiscountNet']}} </td>
-                     <td>{{$detail['taxe']}} </td>
-                     <td>{{$detail['total']}} </td>
+{{--                     <td>{{$detail['DiscountNet']}} </td>--}}
+{{--                     <td>{{$detail['taxe']}} </td>--}}
+                     <td>{{number_format($detail['total'],0,'',' ')}} </td>
                   </tr>
                   @endforeach
                </tbody>
@@ -437,31 +439,31 @@ if (!empty($setting['logo'])) {
          </div>
          <div id="total">
             <table>
+{{--               <tr>--}}
+{{--                  <td>Order Tax</td>--}}
+{{--                  <td>{{$sale['TaxNet']}} </td>--}}
+{{--               </tr>--}}
+{{--               <tr>--}}
+{{--                  <td>Discount</td>--}}
+{{--                  <td>{{$sale['discount']}} </td>--}}
+{{--               </tr>--}}
+{{--               <tr>--}}
+{{--                  <td>Shipping</td>--}}
+{{--                  <td>{{$sale['shipping']}} </td>--}}
+{{--               </tr>--}}
                <tr>
-                  <td>Order Tax</td>
-                  <td>{{$sale['TaxNet']}} </td>
-               </tr>
-               <tr>
-                  <td>Discount</td>
-                  <td>{{$sale['discount']}} </td>
-               </tr>
-               <tr>
-                  <td>Shipping</td>
-                  <td>{{$sale['shipping']}} </td>
-               </tr>
-               <tr>
-                  <td>Total</td>
-                  <td>{{$symbol}} {{$sale['GrandTotal']}} </td>
-               </tr>
-
-               <tr>
-                  <td>Paid Amount</td>
-                  <td>{{$symbol}} {{$sale['paid_amount']}} </td>
+                  <td>Итог</td>
+                  <td> {{number_format($sale['GrandTotal'],0,'',' ')}} {{$symbol}}</td>
                </tr>
 
                <tr>
-                  <td>Due</td>
-                  <td>{{$symbol}} {{$sale['due']}} </td>
+                  <td>Сумма оплаты</td>
+                  <td> {{number_format($sale['paid_amount'],0,'',' ')}} {{$symbol}}</td>
+               </tr>
+
+               <tr>
+                  <td>Должно</td>
+                  <td> {{number_format($sale['due'],0,'',' ')}} {{$symbol}}</td>
                </tr>
             </table>
          </div>
